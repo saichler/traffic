@@ -1,6 +1,7 @@
 package udp
 
 import (
+	"errors"
 	"github.com/saichler/layer8/go/overlay/protocol"
 	"github.com/saichler/shared/go/share/interfaces"
 	"github.com/saichler/shared/go/share/strings"
@@ -25,7 +26,7 @@ func New(port int, log interfaces.ILogger, ml message.IMessageListener, disposab
 	udp.ml = ml
 	udp.disposable = disposable
 	if ml == nil {
-		panic("")
+		return nil, errors.New("message Listener is required")
 	}
 	udp.port = port
 	udp.log = log

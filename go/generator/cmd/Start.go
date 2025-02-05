@@ -17,16 +17,15 @@ func (this *Start) Name() string {
 func (this *Start) Help() string {
 	return "start the service"
 }
-func (this *Start) Run(log interfaces.ILogger) {
+func (this *Start) Run(log interfaces.ILogger) string {
 
 	if this.Udp_port <= 1000 {
-		log.Error("Udp_port must be less than 1000")
-		return
+		return log.Error("Udp_port must be less than 1000").Error()
 	}
 	msg := message.NewRequest(0, "Service")
 	_, err := udp.New(this.Udp_port, log, msg, false)
 	if err != nil {
-		panic(err)
+		return log.Error(err).Error()
 	}
 
 	for {

@@ -46,7 +46,7 @@ func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr)
 				break
 			}
 			curr++
-			if curr >= 65535 {
+			if curr >= 50000 {
 				protocol.Log().Warning("Deputed ports, sleeping for a second Milliseconds ", curr)
 				time.Sleep(time.Millisecond * 250)
 				curr = protocol.Port() + 1
@@ -73,6 +73,9 @@ func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr)
 	took := end - start
 	responseMsg := strings.New("Total Sent: ", strconv.Itoa(msg.quantity), " Received:",
 		strconv.Itoa(msg.quantity-this.pendingReply.Size()), " Took:", took, " Seconds.")
+	if this.timeoutReached {
+		responseMsg.Add(" Timeout!")
+	}
 	resp := NewResponse(this.id, responseMsg.String())
 
 	protocol.Reply(resp.String(), addr)

@@ -17,14 +17,15 @@ const (
 )
 
 type Message struct {
-	id          int
-	action      string
-	destination string
-	port        int
-	quantity    int
-	text        string
-	timeout     int
-	complete    bool
+	id             int
+	action         string
+	destination    string
+	port           int
+	quantity       int
+	text           string
+	timeout        int
+	complete       bool
+	timeoutReached bool
 
 	pendingReply *maps.SyncMap
 	cond         *sync.Cond

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/saichler/shared/go/share/interfaces"
-	"os"
+	"reflect"
 )
 
 type Commands struct {
@@ -23,22 +23,22 @@ func (this *Commands) addCommand(cmd Command) {
 	this.cmds[cmd.Name()] = cmd
 }
 
-func (this *Commands) Run() error {
-	if len(os.Args) < 2 {
-		return this.log.Error("no command specified")
+func (this *Commands) Run(args []string) string {
+	if len(args) < 2 {
+		return this.log.Error("no command specified").Error()
 	}
-	cmd := this.cmds[os.Args[1]]
+	cmd := this.cmds[args[1]]
 	if cmd == nil {
-		return this.log.Error("no " + os.Args[1] + " command was found")
+		return this.log.Error("no " + args[1] + " command was found").Error()
 	}
-	if len(os.Args) == 2 {
+	cmd = reflect.New(reflect.ValueOf(cmd).Elem().Type()).Interface().(Command)
+	if len(args) == 2 {
 		this.log.Info(cmd.Help())
-		return nil
+		return cmd.Help()
 	}
-	err := fillArgs(cmd)
+	err := fillArgs(cmd, args)
 	if err != nil {
-		return this.log.Error(err.Error())
+		return this.log.Error(err.Error()).Error()
 	}
-	cmd.Run(this.log)
-	return nil
+	return cmd.Run(this.log)
 }
