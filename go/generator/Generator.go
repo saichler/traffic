@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/saichler/shared/go/share/logger"
-	"github.com/saichler/traffic/generator/cmd"
+	"github.com/saichler/traffic/go/generator/cmd"
 )
 
 func main() {

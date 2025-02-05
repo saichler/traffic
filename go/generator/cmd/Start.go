@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/saichler/shared/go/share/interfaces"
-	"github.com/saichler/traffic/generator/message"
-	"github.com/saichler/traffic/generator/udp"
+	"github.com/saichler/traffic/go/generator/message"
+	"github.com/saichler/traffic/go/generator/udp"
 	"time"
 )
 

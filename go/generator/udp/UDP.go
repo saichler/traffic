@@ -4,7 +4,7 @@ import (
 	"github.com/saichler/layer8/go/overlay/protocol"
 	"github.com/saichler/shared/go/share/interfaces"
 	"github.com/saichler/shared/go/share/strings"
-	"github.com/saichler/traffic/generator/message"
+	"github.com/saichler/traffic/go/generator/message"
 	"net"
 	"strconv"
 	"time"

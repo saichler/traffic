@@ -59,6 +59,7 @@ func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr)
 			Error(msg, err.Error(), protocol, addr)
 		}
 		curr++
+
 		if i%5000 == 0 && i != 0 {
 			protocol.Log().Info("Sleeping 250 Milliseconds Each 5K packets")
 			time.Sleep(time.Millisecond * 250)
@@ -66,7 +67,7 @@ func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr)
 		}
 	}
 
-	this.Wait()
+	this.Wait(protocol.Log())
 	this.complete = true
 	end := time.Now().Unix()
 	took := end - start

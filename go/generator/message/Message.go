@@ -142,7 +142,9 @@ func (this *Message) String() string {
 func (this *Message) Lock() {
 	this.cond.L.Lock()
 }
-func (this *Message) Wait() {
+func (this *Message) Wait(log interfaces.ILogger) {
+	log.Info("Waiting for task to finish...")
 	defer this.cond.L.Unlock()
 	this.cond.Wait()
+	log.Info("Finished waiting!")
 }
