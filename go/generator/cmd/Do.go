@@ -8,6 +8,7 @@ import (
 
 type Do struct {
 	Udp_port    int
+	Tcp_port    int
 	Destination string
 	Port        int
 	Quantity    int
@@ -43,12 +44,16 @@ func (this *Do) Run(log interfaces.ILogger) string {
 		}
 	}
 
-	msg := message.NewCommand(message.Execute, this.Destination, this.Port, this.Quantity, "", timeout)
+	var msg *message.Message
+	if this.Tcp_port == 0 {
+		msg = message.NewCommand(message.SendUDP, this.Destination, this.Port, this.Quantity, "", timeout)
+	} else {
+		msg = message.NewCommand(message.SendTCP, this.Destination, this.Port, this.Quantity, "", timeout)
+	}
 	Udp, err := udp.New(this.Udp_port-1, log, msg, true)
 	if err != nil {
 		return log.Error(err.Error()).Error()
 	}
-
 	msg.Lock()
 	go msg.StartTimeout(timeout+1, log)
 	err = Udp.Send(msg.String(), "127.0.0.1", this.Udp_port)

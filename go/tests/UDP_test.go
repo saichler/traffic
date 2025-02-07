@@ -5,19 +5,22 @@ import (
 	"github.com/saichler/traffic/go/generator/cmd"
 	"strings"
 	"testing"
+	"time"
 )
 
 var log = logger.NewLoggerDirectImpl(&logger.FmtLogMethod{})
 var cmds = cmd.NewCommands(log)
-var UDP_Port_1 = "47000"
-var UDP_Port_2 = "48000"
+var UDP_Port_1 = "15000"
+var TCP_Port_1 = "15010"
+var UDP_Port_2 = "16000"
+var TCP_Port_2 = "16010"
 
 func init() {
-	args := []string{"generator", "Start", "Udp_port=" + UDP_Port_1}
+	args := []string{"generator", "Start", "Udp_port=" + UDP_Port_1, "Tcp_port=" + TCP_Port_1}
 	go cmds.Run(args)
-	args = []string{"generator", "Start", "Udp_port=" + UDP_Port_2}
+	args = []string{"generator", "Start", "Udp_port=" + UDP_Port_2, "Tcp_port=" + TCP_Port_2}
 	go cmds.Run(args)
-
+	time.Sleep(100 * time.Millisecond)
 }
 
 func TestUnknownCommand(t *testing.T) {
@@ -96,28 +99,28 @@ func TestMissingCommandArgument(t *testing.T) {
 
 func TestUdp_single_packet(t *testing.T) {
 	args := []string{"generator", "Do", "Udp_port=" + UDP_Port_1, "Destination=127.0.0.1", "Port=" + UDP_Port_2, "Quantity=1"}
-	if !testCMD(args, "Total Sent: 1 Received:1 Took", t) {
+	if !testCMD(args, "Total UDP Sent:1 OK:1 Err:0 Timeout:false", t) {
 		return
 	}
 }
 
 func TestUdp_timeout(t *testing.T) {
 	args := []string{"generator", "Do", "Udp_port=" + UDP_Port_1, "Destination=127.0.0.1", "Port=1000", "Quantity=1", "Timeout=1"}
-	if !testCMD(args, "Timeout!", t) {
+	if !testCMD(args, "Total UDP Sent:1 OK:0 Err:1 Timeout:true", t) {
 		return
 	}
 }
 
 func TestUdp_1000_packets(t *testing.T) {
 	args := []string{"generator", "Do", "Udp_port=" + UDP_Port_1, "Destination=127.0.0.1", "Port=" + UDP_Port_2, "Quantity=1000"}
-	if !testCMD(args, "Total Sent: 1000 Received:1000 Took", t) {
+	if !testCMD(args, "Total UDP Sent:1000 OK:1000 Err:0 Timeout:false", t) {
 		return
 	}
 }
 
 func TestUdp_10000_packets(t *testing.T) {
 	args := []string{"generator", "Do", "Udp_port=" + UDP_Port_1, "Destination=127.0.0.1", "Port=" + UDP_Port_2, "Quantity=10000"}
-	if !testCMD(args, "Total Sent: 10000 Received:10000 Took", t) {
+	if !testCMD(args, "Total UDP Sent:10000 OK:10000 Err:0 Timeout:false", t) {
 		return
 	}
 }

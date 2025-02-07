@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	Execute  = "execute"
+	SendUDP  = "sendUdp"
+	SendTCP  = "sendTcp"
 	Request  = "request"
 	Response = "response"
 )
@@ -147,5 +148,8 @@ func (this *Message) Wait(log interfaces.ILogger) {
 	log.Info("Waiting for task to finish...")
 	defer this.cond.L.Unlock()
 	this.cond.Wait()
-	log.Info("Finished waiting!")
+	if !this.timeoutReached {
+		this.complete = true
+		log.Info("Finished waiting!")
+	}
 }

@@ -2,9 +2,8 @@ package message
 
 import (
 	"github.com/saichler/shared/go/share/maps"
-	"github.com/saichler/shared/go/share/strings"
+	"github.com/saichler/traffic/go/generator/tcp"
 	"net"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -15,8 +14,10 @@ func (this *Message) Handle(packet []byte, addr *net.UDPAddr, protocol Protocol)
 		return
 	}
 	switch msg.action {
-	case Execute:
-		this.execute(msg, protocol, addr)
+	case SendUDP:
+		this.sendUdp(msg, protocol, addr)
+	case SendTCP:
+		this.sendTcp(msg, protocol, addr)
 	case Request:
 		this.request(msg, protocol, addr)
 	case Response:
@@ -26,7 +27,13 @@ func (this *Message) Handle(packet []byte, addr *net.UDPAddr, protocol Protocol)
 	}
 }
 
-func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr) {
+func (this *Message) sendTcp(msg *Message, protocol Protocol, addr *net.UDPAddr) {
+	result := tcp.SendHttpRequest(msg.destination, msg.port, msg.quantity)
+	resp := NewResponse(this.id, result)
+	protocol.Reply(resp.String(), addr)
+}
+
+func (this *Message) sendUdp(msg *Message, protocol Protocol, addr *net.UDPAddr) {
 	start := time.Now().Unix()
 	curr := protocol.Port() + 1
 	if this.cond == nil {
@@ -36,6 +43,7 @@ func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr)
 	this.pendingReply = maps.NewSyncMap()
 	this.Lock()
 	this.complete = false
+	this.timeoutReached = false
 	go this.StartTimeout(msg.timeout, protocol.Log())
 
 	for i := 0; i < msg.quantity; i++ {
@@ -68,15 +76,13 @@ func (this *Message) execute(msg *Message, protocol Protocol, addr *net.UDPAddr)
 	}
 
 	this.Wait(protocol.Log())
-	this.complete = true
+
 	end := time.Now().Unix()
 	took := end - start
-	responseMsg := strings.New("Total Sent: ", strconv.Itoa(msg.quantity), " Received:",
-		strconv.Itoa(msg.quantity-this.pendingReply.Size()), " Took:", took, " Seconds.")
-	if this.timeoutReached {
-		responseMsg.Add(" Timeout!")
-	}
-	resp := NewResponse(this.id, responseMsg.String())
+	responseMsg := tcp.CreateReport("UDP", msg.quantity,
+		(msg.quantity - this.pendingReply.Size()),
+		this.pendingReply.Size(), int(took), []string{}, []string{}, this.timeoutReached)
+	resp := NewResponse(this.id, responseMsg)
 
 	protocol.Reply(resp.String(), addr)
 
