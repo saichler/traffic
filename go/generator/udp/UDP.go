@@ -8,7 +8,6 @@ import (
 	"github.com/saichler/traffic/go/generator/message"
 	"net"
 	"strconv"
-	"time"
 )
 
 type UDP struct {
@@ -77,8 +76,6 @@ func (this *UDP) rx() {
 		}
 		if n > 0 {
 			this.ml.Handle(packet[:n], addr, this)
-		} else {
-			time.Sleep(time.Millisecond * 100)
 		}
 	}
 	if !this.disposable {
@@ -92,7 +89,7 @@ func (this *UDP) Log() interfaces.ILogger {
 
 func (this *UDP) Send(msg, host string, port int) error {
 	if this.ml == nil {
-		panic("")
+		return errors.New("message Listener is required")
 	}
 	addr, err := net.ResolveUDPAddr("udp", host+":"+strconv.Itoa(port))
 	if err != nil {

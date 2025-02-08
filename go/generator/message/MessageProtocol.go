@@ -73,6 +73,10 @@ func (this *Message) sendUdp(msg *Message, protocol Protocol, addr *net.UDPAddr)
 			time.Sleep(time.Millisecond * 250)
 			curr = protocol.Port() + 1
 		}
+
+		if i%250 == 0 && i != 0 {
+			time.Sleep(time.Millisecond * 50)
+		}
 	}
 
 	this.Wait(protocol.Log())

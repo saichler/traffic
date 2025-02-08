@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: traffic-01
+  labels:
+    name: traffic-01
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: traffic-01
+  name: traffic-01-01
+  labels:
+    app: traffic-01-01
+spec:
+  selector:
+    matchLabels:
+      app: traffic-01-01
+  template:
+    metadata:
+      labels:
+        app: traffic-01-01
+    spec:
+      containers:
+        - name: traffic-01-01
+          image: saichler/traffic-generator:latest
+          imagePullPolicy: Always
+          env:
+            - name: CMD
+              value: Start
+            - name: Udp_port
+              value: '15000'
+            - name: Tcp_port
+              value: '16000'
+          ports:
+            - containerPort: 15000
+            - containerPort: 16000
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: traffic-01-01
+  namespace: traffic-01
+spec:
+  type: ClusterIP
+  ports:
+    - port: 15000
+      protocol: UDP
+      targetPort: 15000
+      name: udp
+    - port: 16000
+      targetPort: 16000
+      protocol: TCP
+      name: tcp
+  selector:
+    app: traffic-01-01
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: traffic-01-01-node
+  namespace: traffic-01
+spec:
+  type: NodePort
+  ports:
+    - port: 15000
+      targetPort: 15000
+      nodePort: 30000
+      protocol: UDP
+      name: udp
+    - port: 16000
+      targetPort: 16000
+      nodePort: 30001
+      protocol: TCP
+      name: tcp
+  selector:
+    app: traffic-01-01
