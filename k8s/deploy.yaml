@@ -28,6 +28,10 @@ spec:
           image: saichler/traffic-generator:latest
           imagePullPolicy: Always
           env:
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
             - name: CMD
               value: Start
             - name: Udp_port
