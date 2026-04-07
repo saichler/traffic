@@ -1,9 +1,9 @@
 package message
 
 import (
-	"github.com/saichler/shared/go/share/interfaces"
-	"github.com/saichler/shared/go/share/maps"
-	strings2 "github.com/saichler/shared/go/share/strings"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8utils/go/utils/maps"
+	strings2 "github.com/saichler/l8utils/go/utils/strings"
 	"net"
 	"strconv"
 	"strings"
@@ -27,6 +27,7 @@ type Message struct {
 	timeout        int
 	complete       bool
 	timeoutReached bool
+	timeoutGen     int
 
 	pendingReply *maps.SyncMap
 	cond         *sync.Cond
@@ -39,14 +40,17 @@ type IMessageListener interface {
 type Protocol interface {
 	Reply(string, *net.UDPAddr)
 	Send(string, string, int) error
-	New(int, interfaces.ILogger, IMessageListener, bool) Protocol
-	Log() interfaces.ILogger
+	New(int, ifs.ILogger, IMessageListener, bool) Protocol
+	Log() ifs.ILogger
 	String() string
 	Port() int
 	Shutdown()
 	Disposable() bool
 }
 
+// nextId is a global counter shared by both client and service messages.
+// IDs only need to be unique within a request-response pair, so a shared
+// counter is acceptable.
 var nextId = 0
 var mtx = &sync.Mutex{}
 
@@ -99,12 +103,13 @@ func Error(msg *Message, errMsg string, p Protocol, addr *net.UDPAddr) {
 
 func MessageOf(str string, p Protocol, addr *net.UDPAddr) *Message {
 	msg := &Message{}
-	split := strings.Split(str, "|")
-	msg.id, _ = strconv.Atoi(split[0])
-	if len(split) != 7 {
+	split := strings.SplitN(str, "|", 7)
+	if len(split) < 7 {
+		msg.id, _ = strconv.Atoi(split[0])
 		Error(msg, "message format error:"+str, p, addr)
 		return nil
 	}
+	msg.id, _ = strconv.Atoi(split[0])
 	msg.action = split[1]
 	msg.destination = split[2]
 	msg.port, _ = strconv.Atoi(split[3])
@@ -120,6 +125,10 @@ func (this *Message) Bytes() []byte {
 }
 
 func (this *Message) Text() string {
+	if this.cond != nil {
+		this.cond.L.Lock()
+		defer this.cond.L.Unlock()
+	}
 	return this.text
 }
 
@@ -144,7 +153,7 @@ func (this *Message) String() string {
 func (this *Message) Lock() {
 	this.cond.L.Lock()
 }
-func (this *Message) Wait(log interfaces.ILogger) {
+func (this *Message) Wait(log ifs.ILogger) {
 	log.Info("Waiting for task to finish...")
 	defer this.cond.L.Unlock()
 	this.cond.Wait()

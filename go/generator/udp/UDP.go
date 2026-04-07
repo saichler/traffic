@@ -2,25 +2,26 @@ package udp
 
 import (
 	"errors"
-	"github.com/saichler/layer8/go/overlay/protocol"
-	"github.com/saichler/shared/go/share/interfaces"
-	"github.com/saichler/shared/go/share/strings"
-	"github.com/saichler/traffic/go/generator/message"
+	"github.com/saichler/l8traffic/go/generator/message"
+	"github.com/saichler/l8types/go/ifs"
+	"github.com/saichler/l8utils/go/utils/ipsegment"
+	"github.com/saichler/l8utils/go/utils/strings"
 	"net"
 	"strconv"
+	"sync/atomic"
 )
 
 type UDP struct {
 	port       int
 	addr       string
 	conn       *net.UDPConn
-	log        interfaces.ILogger
-	shutdown   bool
+	log        ifs.ILogger
+	shutdown   atomic.Bool
 	ml         message.IMessageListener
 	disposable bool
 }
 
-func New(port int, log interfaces.ILogger, ml message.IMessageListener, disposable bool) (*UDP, error) {
+func New(port int, log ifs.ILogger, ml message.IMessageListener, disposable bool) (*UDP, error) {
 	udp := &UDP{}
 	udp.ml = ml
 	udp.disposable = disposable
@@ -34,11 +35,11 @@ func New(port int, log interfaces.ILogger, ml message.IMessageListener, disposab
 		return nil, err
 	}
 	go udp.rx()
-	udp.addr = protocol.MachineIP
+	udp.addr = ipsegment.MachineIP
 	return udp, nil
 }
 
-func (this *UDP) New(port int, log interfaces.ILogger, ml message.IMessageListener, disposable bool) message.Protocol {
+func (this *UDP) New(port int, log ifs.ILogger, ml message.IMessageListener, disposable bool) message.Protocol {
 	udp, err := New(port, log, ml, disposable)
 	if err != nil {
 		return nil
@@ -60,14 +61,14 @@ func (this *UDP) bind() error {
 }
 
 func (this *UDP) rx() {
-	packet := make([]byte, 1024)
+	packet := make([]byte, 65535)
 	defer this.conn.Close()
 	if !this.disposable {
 		this.log.Info("Starting UDP listener on port " + strconv.Itoa(this.port))
 	}
-	for !this.shutdown {
+	for !this.shutdown.Load() {
 		n, addr, err := this.conn.ReadFromUDP(packet)
-		if this.shutdown {
+		if this.shutdown.Load() {
 			break
 		}
 		if err != nil {
@@ -83,7 +84,7 @@ func (this *UDP) rx() {
 	}
 }
 
-func (this *UDP) Log() interfaces.ILogger {
+func (this *UDP) Log() ifs.ILogger {
 	return this.log
 }
 
@@ -115,7 +116,7 @@ func (this *UDP) Shutdown() {
 	if !this.disposable {
 		this.log.Info("Shutting down UDP listener ", this.String())
 	}
-	this.shutdown = true
+	this.shutdown.Store(true)
 	this.conn.Close()
 }
 

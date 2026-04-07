@@ -1,8 +1,8 @@
 package message
 
 import (
-	"github.com/saichler/shared/go/share/maps"
-	"github.com/saichler/traffic/go/generator/tcp"
+	"github.com/saichler/l8traffic/go/generator/tcp"
+	"github.com/saichler/l8utils/go/utils/maps"
 	"net"
 	"sync"
 	"time"
@@ -44,6 +44,7 @@ func (this *Message) sendUdp(msg *Message, protocol Protocol, addr *net.UDPAddr)
 	this.Lock()
 	this.complete = false
 	this.timeoutReached = false
+	this.timeoutGen++
 	go this.StartTimeout(msg.timeout, protocol.Log())
 
 	for i := 0; i < msg.quantity; i++ {
@@ -107,15 +108,16 @@ func (this *Message) request(msg *Message, protocol Protocol, addr *net.UDPAddr)
 
 func (this *Message) response(msg *Message, protocol Protocol, addr *net.UDPAddr) {
 	msg.complete = true
-	//protocol.Log().Info(msg.text)
-	this.text = msg.text
 	if protocol.Disposable() {
 		protocol.Shutdown()
 	}
+	this.cond.L.Lock()
+	this.text = msg.text
 	if this.pendingReply != nil {
 		this.pendingReply.Delete(msg.id)
 	}
 	if this.pendingReply == nil || this.pendingReply.Size() == 0 {
 		this.cond.Broadcast()
 	}
+	this.cond.L.Unlock()
 }

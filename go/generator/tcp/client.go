@@ -2,7 +2,7 @@ package tcp
 
 import (
 	"bytes"
-	strings2 "github.com/saichler/shared/go/share/strings"
+	strings2 "github.com/saichler/l8utils/go/utils/strings"
 	"net"
 	"strconv"
 	"strings"

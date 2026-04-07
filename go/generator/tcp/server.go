@@ -2,33 +2,36 @@ package tcp
 
 import (
 	"bytes"
-	"github.com/saichler/shared/go/share/interfaces"
+	"github.com/saichler/l8types/go/ifs"
 	"net/http"
 	"strconv"
 )
 
-type TcpSerer struct {
+type TcpServer struct {
 	port      int
 	webServer *http.Server
 }
 
-func init() {
-	http.DefaultServeMux.HandleFunc("/", response)
-}
-
-func RunTcpServer(port int, log interfaces.ILogger) string {
-	server := &TcpSerer{}
+func RunTcpServer(port int, log ifs.ILogger) *TcpServer {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", response)
+	server := &TcpServer{port: port}
 	server.webServer = &http.Server{
 		Addr:    ":" + strconv.Itoa(port),
-		Handler: http.DefaultServeMux,
+		Handler: mux,
 	}
 	log.Info("Starting TCP listener on port " + strconv.Itoa(port))
-	err := server.webServer.ListenAndServe()
-	if err != nil {
-		log.Error("Failed TCP listener on port " + strconv.Itoa(port))
-		return err.Error()
-	}
-	return ""
+	go func() {
+		err := server.webServer.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Error("Failed TCP listener on port " + strconv.Itoa(port))
+		}
+	}()
+	return server
+}
+
+func (this *TcpServer) Shutdown() {
+	this.webServer.Close()
 }
 
 func response(w http.ResponseWriter, r *http.Request) {

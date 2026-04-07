@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"github.com/saichler/shared/go/share/logger"
-	"github.com/saichler/traffic/go/generator/cmd"
+	"github.com/saichler/l8traffic/go/generator/cmd"
+	"github.com/saichler/l8utils/go/utils/logger"
 	"strings"
 	"testing"
 	"time"
@@ -48,7 +48,7 @@ func testCMD(args []string, expected string, t *testing.T) bool {
 
 func TestStartInvalidPort(t *testing.T) {
 	args := []string{"generator", "Start", "Udp_port=999"}
-	if !testCMD(args, "Udp_port must be less than 1000", t) {
+	if !testCMD(args, "Udp_port must be greater than 1000", t) {
 		return
 	}
 }
@@ -119,7 +119,7 @@ func TestUdp_1000_packets(t *testing.T) {
 }
 
 func TestUdp_10000_packets(t *testing.T) {
-	args := []string{"generator", "Do", "Udp_port=" + UDP_Port_1, "Destination=127.0.0.1", "Port=" + UDP_Port_2, "Quantity=10000"}
+	args := []string{"generator", "Do", "Udp_port=" + UDP_Port_1, "Destination=127.0.0.1", "Port=" + UDP_Port_2, "Quantity=10000", "Timeout=30"}
 	if !testCMD(args, "Total UDP Sent:10000 OK:10000 Err:0 Timeout:false", t) {
 		return
 	}

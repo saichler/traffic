@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/saichler/shared/go/share/interfaces"
-	"github.com/saichler/traffic/go/generator/message"
-	"github.com/saichler/traffic/go/generator/udp"
+	"github.com/saichler/l8traffic/go/generator/message"
+	"github.com/saichler/l8traffic/go/generator/udp"
+	"github.com/saichler/l8types/go/ifs"
 )
 
 type Do struct {
@@ -21,7 +21,7 @@ func (this *Do) Name() string {
 func (this *Do) Help() string {
 	return "Do a command"
 }
-func (this *Do) Run(log interfaces.ILogger) string {
+func (this *Do) Run(log ifs.ILogger) string {
 	if this.Udp_port == 0 {
 		return log.Error("Udp_port cannot be zero").Error()
 	}
@@ -54,6 +54,7 @@ func (this *Do) Run(log interfaces.ILogger) string {
 	if err != nil {
 		return log.Error(err.Error()).Error()
 	}
+	defer Udp.Shutdown()
 	msg.Lock()
 	go msg.StartTimeout(timeout+1, log)
 	err = Udp.Send(msg.String(), "127.0.0.1", this.Udp_port)

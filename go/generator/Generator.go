@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/saichler/shared/go/share/logger"
-	"github.com/saichler/traffic/go/generator/cmd"
+	"github.com/saichler/l8traffic/go/generator/cmd"
+	"github.com/saichler/l8utils/go/utils/logger"
 	"os"
 )
 

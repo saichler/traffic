@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"errors"
-	"github.com/saichler/shared/go/share/interfaces"
+	"github.com/saichler/l8types/go/ifs"
 	"reflect"
 	"strconv"
 	"strings"
@@ -12,7 +12,7 @@ import (
 type Command interface {
 	Name() string
 	Help() string
-	Run(log interfaces.ILogger) string
+	Run(log ifs.ILogger) string
 }
 
 func argNames(cmd Command) string {

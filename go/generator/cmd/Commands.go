@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"github.com/saichler/shared/go/share/interfaces"
+	"github.com/saichler/l8types/go/ifs"
 	"reflect"
 )
 
 type Commands struct {
 	cmds map[string]Command
-	log  interfaces.ILogger
+	log  ifs.ILogger
 }
 
-func NewCommands(log interfaces.ILogger) *Commands {
+func NewCommands(log ifs.ILogger) *Commands {
 	cmds := &Commands{}
 	cmds.log = log
 	cmds.cmds = make(map[string]Command)
